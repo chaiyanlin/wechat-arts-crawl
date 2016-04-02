@@ -1,0 +1,28 @@
+{
+  "name": "wechat-arts-crawl",
+  "version": "1.0.0",
+  "description": "A crawl program for collecting wechat arts based on NodeJs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/chaiyanlin/wechat-arts-crawl.git"
+  },
+  "keywords": [
+    "wecaht",
+    "wx",
+    "crawl"
+  ],
+  "author": "Yanlin Chai",
+  "license": "MIT ",
+  "bugs": {
+    "url": "https://github.com/chaiyanlin/wechat-arts-crawl/issues"
+  },
+  "homepage": "https://github.com/chaiyanlin/wechat-arts-crawl#readme",
+  "devDependencies": {
+    "crawler": "^0.4.3",
+    "xml2js": "^0.4.16"
+  }
+}
