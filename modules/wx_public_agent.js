@@ -68,6 +68,8 @@ WxPublicAgent.prototype = {
 		    	me.wxPublicArtsInfo.totalPages = data.totalPages;
 		    	console.log('获得公众号文章总数：');
 		    	console.log(me.wxPublicArtsInfo);
+		    },
+		    onDrain: function() {
 		    	console.log('开始获取文章列表...');
 		    	me.queryArtsList();
 		    }
@@ -75,39 +77,48 @@ WxPublicAgent.prototype = {
 
 		me.cGetArtsList = new Crawler({
 			forceUTF8: true,
+			rateLimits: 3000,
 			userAgent: me.userAgent,
 		    callback : function (error, result, $) {
 		    	var data = JSON.parse(result.body);
 		    	console.log('获得文章列表：------------------------------------');
-		    	console.log(data.items);
 		    	if ( !fs.existsSync('./out') )
 					fs.mkdirSync('./out');
 				for (var i = 0; i < data.items.length; i++) {
 					if ( !data.items[i] )
 						continue;
 					parseString(data.items[i], function(err, res){
-						console.log('原文章：' + res.DOCUMENT.item[0].display[0].title1[0]);
+						console.log('获得文章：' + res.DOCUMENT.item[0].display[0].title1[0]);
 						var title = me.strReplaceAll(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', res.DOCUMENT.item[0].display[0].title1[0]);
-						console.log('获得文章：' + title);
 						var content = JSON.stringify(res.DOCUMENT.item[0].display[0]);
-						fs.appendFile( './out/' + title + '.json', content, (err) => {
+						var artUrl = 'http://weixin.sogou.com' + res.DOCUMENT.item[0].display[0].url;
+						fs.mkdirSync('./out/' + title);
+						fs.appendFile( './out/' + title + '/' + title + '.json', content, (err) => {
 						  if (err) 
 						  	throw err;
 						});
+						me.queryArticle(artUrl);
 					});
 				}
-		    	/*fs.appendFile( './out/' + data.page + '.json', JSON.stringify(data.items) + '\r\n', (err) => {
-				  if (err) 
-				  	throw err;
-				});	*/
+		    },
+		    onDrain: function() {
+		    	console.log('获取列表任务完成');
 		    }
 		});
 
+		//console.log(me.cGetArtsList);process.exit(1);
+
 
 		me.cGetArticle = new Crawler({
-			forceUTF8: true,
+			/*forceUTF8: true,*/
 			userAgent: me.userAgent,
+			rateLimits: 6000,
 		    callback : function (error, result, $) {
+		    	console.log(result.body);
+		    },
+		    onDrain: function() {
+		    	console.log('文章抓取完成');
+		    	process.exit(0);
 		    }
 		});
 	},
@@ -124,12 +135,14 @@ WxPublicAgent.prototype = {
 			requestUrl = me.queryUrlParams(me.url, {openid: me.openid, ext: me.ext, page: page})
 			console.log({openid: me.openid, ext: me.ext, page: page});
 			console.log('request url: ' + requestUrl);
-			setTimeout(me.cGetArtsList.queue(requestUrl), 5000);
+			me.cGetArtsList.queue(requestUrl)
 		}
 	},
 
-	queryArticle: function() {
+	queryArticle: function(url) {
+		console.log('请求文章正文：' + url);
 		var me = this;
+		me.cGetArticle.queue(url);
 	},
 
 
