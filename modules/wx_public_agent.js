@@ -79,7 +79,7 @@ WxPublicAgent.prototype = {
 		    callback : function (error, result, $) {
 		    	var data = JSON.parse(result.body);
 		    	console.log('获得文章列表：------------------------------------');
-		    	console.log(data);
+		    	console.log(data.items);
 		    	if ( !fs.existsSync('./out') )
 					fs.mkdirSync('./out');
 				for (var i = 0; i < data.items.length; i++) {
@@ -121,7 +121,7 @@ WxPublicAgent.prototype = {
 		var me = this,
 			requestUrl = null;
 		for (var page = 1; page <= me.wxPublicArtsInfo.totalPages; page++) {
-			me.queryUrlParams(me.url, {openid: me.openid, ext: me.ext, page: page})
+			requestUrl = me.queryUrlParams(me.url, {openid: me.openid, ext: me.ext, page: page})
 			console.log({openid: me.openid, ext: me.ext, page: page});
 			console.log('request url: ' + requestUrl);
 			me.cGetArtsList.queue(requestUrl);
