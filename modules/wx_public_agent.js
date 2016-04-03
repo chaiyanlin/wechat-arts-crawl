@@ -124,7 +124,10 @@ WxPublicAgent.prototype = {
 			requestUrl = me.queryUrlParams(me.url, {openid: me.openid, ext: me.ext, page: page})
 			console.log({openid: me.openid, ext: me.ext, page: page});
 			console.log('request url: ' + requestUrl);
-			me.cGetArtsList.queue(requestUrl);
+			console.log('请求将于' + 5 * page +'秒后执行...');
+			setTimeout(function(){
+				me.cGetArtsList.queue(requestUrl);
+			}, 5 * page);
 		}
 	},
 
