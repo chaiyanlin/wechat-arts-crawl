@@ -11,5 +11,5 @@ rimraf('./out', function(err){
 });
 
 var wxPublicAgent = new WxPublicAgent();
-wxPublicAgent.init('oIWsFt2nfuvCeWKPNKZl-d7-fTmU', '1kKFQtkEe38YkiZ8CrsiwV3_ilcT4skeVRGimv7rhjH2DWasTyeIHtKngwzpO_HL');
+wxPublicAgent.init('oIWsFt2nfuvCeWKPNKZl-d7-fTmU', '1kKFQtkEe38YkiZ8CrsiwV3_ilcT4skeVRGimv7rhjH2DWasTyeIHqtp8sbVJbJs');
 wxPublicAgent.queryArtsInfo();
