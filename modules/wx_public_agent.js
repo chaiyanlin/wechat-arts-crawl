@@ -1,6 +1,6 @@
-var Crawler = require("crawler"),
-	fs             = require("fs"),
-	parseXmlString = require('xml2js').parseString;
+var Crawler     = require("crawler"),
+	fs          = require("fs"),
+	parseString = require('xml2js').parseString;
 
 /**
  * 微信公众号文章列表获取模块
@@ -60,6 +60,7 @@ WxPublicAgent.prototype = {
 		me.ext    = ext;
 
 		me.cGetArtsInfo = new Crawler({
+			forceUTF8: true,
 			userAgent: me.userAgent,
 		    callback : function (error, result, $) {
 		    	var data = JSON.parse(result.body);
@@ -73,23 +74,40 @@ WxPublicAgent.prototype = {
 		});
 
 		me.cGetArtsList = new Crawler({
+			forceUTF8: true,
 			userAgent: me.userAgent,
 		    callback : function (error, result, $) {
 		    	var data = JSON.parse(result.body);
 		    	console.log('获得文章列表：------------------------------------');
-		    	//console.log(data.items);
+		    	console.log(data);
 		    	if ( !fs.existsSync('./out') )
 					fs.mkdirSync('./out');
 				for (var i = 0; i < data.items.length; i++) {
-					parseXmlString(data.items[i], function(err, res){
-						console.log(res);
-						console.log(res.item[0][0]);
+					if ( !data.items[i] )
+						continue;
+					parseString(data.items[i], function(err, res){
+						console.log('原文章：' + res.DOCUMENT.item[0].display[0].title1[0]);
+						var title = me.strReplaceAll(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', res.DOCUMENT.item[0].display[0].title1[0]);
+						console.log('获得文章：' + title);
+						var content = JSON.stringify(res.DOCUMENT.item[0].display[0]);
+						fs.appendFile( './out/' + title + '.json', content, (err) => {
+						  if (err) 
+						  	throw err;
+						});
 					});
 				}
 		    	/*fs.appendFile( './out/' + data.page + '.json', JSON.stringify(data.items) + '\r\n', (err) => {
 				  if (err) 
 				  	throw err;
 				});	*/
+		    }
+		});
+
+
+		me.cGetArticle = new Crawler({
+			forceUTF8: true,
+			userAgent: me.userAgent,
+		    callback : function (error, result, $) {
 		    }
 		});
 	},
@@ -100,11 +118,18 @@ WxPublicAgent.prototype = {
 	},
 
 	queryArtsList: function() {
-		var me = this;
+		var me = this,
+			requestUrl = null;
 		for (var page = 1; page <= me.wxPublicArtsInfo.totalPages; page++) {
+			me.queryUrlParams(me.url, {openid: me.openid, ext: me.ext, page: page})
 			console.log({openid: me.openid, ext: me.ext, page: page});
-			me.cGetArtsList.queue(me.queryUrlParams(me.url, {openid: me.openid, ext: me.ext, page: page}));
+			console.log('request url: ' + requestUrl);
+			me.cGetArtsList.queue(requestUrl);
 		}
+	},
+
+	queryArticle: function() {
+		var me = this;
 	},
 
 
@@ -125,6 +150,20 @@ WxPublicAgent.prototype = {
 			i++;
 		}
 		return url;
+	},
+
+	/**
+	 * [strReplaceAll]
+	 * @param  {array} search
+	 * @param  {string} replacement
+	 * @param  {string} str
+	 * @return {string}
+	 */
+	strReplaceAll: function (search, replacement, str) {
+		for (var i = 0; i < search.length; i++) {
+			str = str.split(search[i]).join(replacement);
+		}
+		return str;
 	}
 };
 module.exports = WxPublicAgent;

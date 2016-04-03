@@ -23,6 +23,8 @@
   "homepage": "https://github.com/chaiyanlin/wechat-arts-crawl#readme",
   "devDependencies": {
     "crawler": "^0.4.3",
-    "xml2js": "^0.4.16"
+    "rimraf": "^2.5.2",
+    "xml2js": "^0.4.16",
+    "xmldoc": "^0.4.0"
   }
 }
