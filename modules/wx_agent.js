@@ -1,165 +1,120 @@
-var request    = require("request"),
-fs             = require("fs"),
-qs             = require("querystring"),
-parseString    = require("xml2js").parseString,
-wxRetValParser = require('./wx_retval_parser.js');
+var request = require("request"),
+	fs      = require("fs"),
+	path    = require('path'),
+	qs      = require("querystring"),
+	cheerio = require('cheerio');
 
 
-var WxAgent = function() {};
+WxAgent = function(){};
 
 WxAgent.prototype = {
-	/**
-	 * 微信公众号openid
-	 * @type {string}
-	 */
-	openid: undefined,
+	queryUrl: null,
 
-	/**
-	 * 登录态需要字段
-	 * @type {string}
-	 */
-	ext: undefined,
+	hasNextPage: true,
 
-	/**
-	 * 公众号文章api接口地址
-	 * @type {String}
-	 */
-	api: 'http://weixin.sogou.com/gzhjs',
+	fromMsgId: null,
 
-	/**
-	 * 微信公众号所有文章总数
-	 * 总文章数：totalItems
-	 * 总页数：totalPages（每页固定10篇文章）
-	 * @type {Object}
-	 */
-	wxPublicArtsInfo: {totalItems: undefined, totalPages: undefined},
+	totalPage: 0,
 
-	/**
-	 * cookie
-	 * @type {string}
-	 */
-	cookie: undefined,
-
-
-	currentPage: 1,
-
-	currentArt: 1,
-
-	queryArtsListTimer: null,
-
-	queryArtContentTimer: null,
-
-	wxRetValParser: null,
-
-
-	init: function(openid, ext) {
-		var me            = this;
-		me.openid         = openid;
-		me.ext            = ext;
-		me.wxRetValParser = new wxRetValParser();
-		me.wxRetValParser.init();
-		me.queryArtsInfo();
+	init: function(url) {
+		this.queryUrl = url.split('#').shift();
+		this.queryUrl += '&f=json';
+		console.log(this.queryUrl);
+		this.getMsgList();
 	},
 
-
-	queryArtsInfo: function() {
+	getMsgList: function() {
 		var me = this;
-		var jar = request.jar();
-		var url = me.api + '?' + qs.stringify({openid: me.openid, ext: me.ext});
-		var options = {
-			url: url,
-		    method: "GET",
-		    followRedirect: true,
-		    maxRedirects: 10,
-		    jar: jar
+		var fromMsgId = me.fromMsgId || '';
+		if ( !me.hasNextPage ) {
+			console.log('总页数：' + me.totalPage);
+			return;
+		}
+		var opts = {
+			url: me.queryUrl + '&frommsgid=' + fromMsgId,
+			method: "GET",
+			followRedirect: true
 		};
 
-		request(options, function(error, response, body){
+		console.log('request url: ' + opts.url);
+
+		request(opts, function(error, response, body){
 			var data = JSON.parse(body);
-			me.wxPublicArtsInfo.totalItems = data.totalItems;
-			me.wxPublicArtsInfo.totalPages = data.totalPages;
-			console.log('获得公众号文章总数：');
-			console.log(me.wxPublicArtsInfo);
-			console.log('获得cookie：');
-			me.cookie = jar.getCookieString(url);
-			console.log(me.cookie);
-			me.queryArtsListTimer = setTimeout(function(){
-				me.queryArtsList();
-			}, 3000);
+			if ( data.ret != 0 ) {
+				throw data.errmsg;
+			}
+			me.hasNextPage = (data.is_continue == 1);
+			var generalMsgList = JSON.parse(data.general_msg_list).list;
+			for (var i = 0; i < generalMsgList.length; i++) {
+				me.msgPaser(generalMsgList[i]);
+				if ( i + 1 === generalMsgList.length ) {
+					me.fromMsgId = generalMsgList[i].comm_msg_info.id;
+				}
+			}
+			me.totalPage ++;
+			me.getMsgList();
 		});
 	},
 
-	queryArtsList: function() {
+
+	msgPaser: function(msg) {
 		var me = this;
-		if ( me.currentPage > me.wxPublicArtsInfo.totalPages ) {
-			clearTimeout(me.queryArtsListLoopTimer);
-			me.queryArtsListTimer = null;
-			console.log('请求列表任务完成');
-			me.wxRetValParser.createUrlsFile();
-			me.queryArtContent();
+		if ( !msg.hasOwnProperty('app_msg_ext_info') || !isNaN(msg.app_msg_ext_info.title) )
 			return;
-		}
-		var url = null;
-		var jar = request.jar();
-		var options = {
-			url: null,
-		    method: "GET",
-		    followRedirect: true,
-		    maxRedirects: 10,
-		    jar: null
-		};
-		console.log('开始请求文章列表...第' + me.currentPage + '页...');
-		options.url = me.api + '?' + qs.stringify({openid: me.openid, ext: me.ext, page: me.currentPage});
-		options.jar = jar.setCookie(me.cookie, options.url);
-		request(options, function(error, response, body){
-			me.cookie = jar.getCookieString(options.url);
-			me.wxRetValParser.parserArtsList(body);
-			me.currentPage++;
-			me.queryArtsListTimer = setTimeout(function(){
-				me.queryArtsList();
-			}, 3000);
+		console.log('获得文章：' + msg.app_msg_ext_info.title);
+		var title = me.strReplaceAll(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', msg.app_msg_ext_info.title);
+		title += '(id=' + msg.comm_msg_info.id + ')';
+		var opts = {
+					  url: msg.app_msg_ext_info.content_url,
+					  method: "GET",
+					  followRedirect: true
+				   };
+		request(opts, function(error, response, body){
+			fs.mkdirSync('./out/' + title);
+			fs.appendFile( './out/' + title + '/' + title + '.html', body, (err) => {
+			  if (err) 
+			  	console.log(err);
+			});
+			var $ = cheerio.load(body);
+			$('img').each(function(i,e){
+				me.downloadImg($(this).data('src'), './out/' + title);
+				me.downloadImg($(this).attr('src'), './out/' + title);
+			});
 		});
 	},
 
-	queryArtContent: function() {
+
+	downloadImg: function(url, dir) {
+		if ( !url || new RegExp("base64").test(url) )
+			return;
 		var me = this;
-		if ( me.currentArt > me.wxRetValParser.urlList.length ) {
-			clearTimeout(me.queryArtContentTimer);
-			me.queryArtContentTimer = null;
-			console.log('脚本结束！');
-			return;
-		}
-		var url = null;
-		var jar = request.jar();
-		var options = {
-			url: null,
-		    method: "GET",
-		    followRedirect: true,
-		    maxRedirects: 10,
-		    jar: null
-		};
-		console.log('请求文章内容...(' + me.wxRetValParser.urlList[me.currentArt].title + ')');
-		console.log('文章链接：' + me.wxRetValParser.urlList[me.currentArt].url);
-		options.url = me.wxRetValParser.urlList[me.currentArt].url;
-		options.jar = jar.setCookie(me.cookie, options.url);
-		request(options, function(error, response, body){
-			me.cookie = jar.getCookieString(options.url);
-			me.createWxPublicHtmlFile(me.wxRetValParser.urlList[me.currentArt], body);
-			me.currentArt++;
-			me.queryArtContentTimer = setTimeout(function(){
-				me.queryArtContent();
-			}, 3000);
-		});
+		console.log('download img from url: ' + url);
+		var ext = path.extname(url) || '.png';
+		var timeStamp = + new Date();
+		request(url, function(error, response, body){
+			if (error) {
+				console.log(error.code);
+				console.log('下载图片失败：' + url);
+				fs.appendFile('./out/' + 'error.log', url + '=>' + dir + '\r\n', (err)=>{
+					if (err) 
+						console.log(err);
+				});
+			}
+		}).pipe(fs.createWriteStream(dir + '/' + timeStamp + ext));
 	},
 
-
-	createWxPublicHtmlFile: function(art, html) {
-		fs.appendFile( art.folder + '/' + art.title + '.html', html, (err) => {
-		  if (err) 
-		  	throw err;
-		  console.log('创建：' + art.folder + '/' + art.title + '.html');
-		});
+	/**
+	 * [strReplaceAll]
+	 * @param  {array} search
+	 * @param  {string} replacement
+	 * @param  {string} str
+	 * @return {string}
+	 */
+	strReplaceAll: function (search, replacement, str) {
+		for (var i = 0; i < search.length; i++) {
+			str = str.split(search[i]).join(replacement);
+		}
+		return str;
 	}
-
 };
 module.exports = WxAgent;
