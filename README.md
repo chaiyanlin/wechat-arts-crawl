@@ -37,8 +37,15 @@ rimraf('./out/*', function(err){
 ```
 命令行执行node app.js
 
+###执行效果演示
+![cmd output][4]
+![out][5]
+
 随后可关注out路径下的输出，如果图片下载出现错误，会在对应文件夹的error.log里面记录，现在该脚本还要不完善的地方，会在今后更新。
+
 
   [1]: http://a1.qpic.cn/psb?/V11nXmZd1imMs1/mjBiuVJe6wRRxQXAgSnLkz.XG0NBPzbMH1iU2oRoRBc!/b/dGYAAAAAAAAA&bo=gAJyBAAAAAADB9Y!&rf=viewer_4
   [2]: http://a2.qpic.cn/psb?/V11nXmZd1imMs1/CIWj0YJ67wbIjYzvTuo6OkSVLj4Aa4sMUT7JuyPg7xE!/b/dGEAAAAAAAAA&bo=gAJyBAAAAAADANE!&rf=viewer_4
   [3]: http://a1.qpic.cn/psb?/V11nXmZd1imMs1/DMg5j43sOBFnWNNeQkwIjdmoflSe.MasTvPZVY2YNNg!/b/dFwBAAAAAAAA&bo=gAJyBAAAAAADANE!&rf=viewer_4
+  [4]: http://a2.qpic.cn/psb?/V11nXmZd1imMs1/ONOP3Dda9wQEOGco*2tIZdiVB5xfb*N0XO21pXu0rAo!/b/dOUAAAAAAAAA&bo=HASAAgAAAAADB7g!&rf=viewer_4
+  [5]: http://a1.qpic.cn/psb?/V11nXmZd1imMs1/qUjEKmB.rMOVCe1rFjVsVonledcDzvr9xZvF3QVPrEA!/b/dOEAAAAAAAAA&bo=*gWAAgAAAAADAFw!&rf=viewer_4
