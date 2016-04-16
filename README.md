@@ -16,7 +16,9 @@ A crawl program for collecting wechat arts based on NodeJs
 ![关注公众号][1]
 ![历史消息页面][2]
 2. 进入“历史消息页面”后，将此页面分享到你的“印象笔记”或“有道笔记”，我们需要获得该页面的url，【但注意！千万不要通过转发，复制链接等方式获得，微信或将关键参数过滤掉！有兴趣的自己可以试一下，保存到印象笔记和直接复制url所最终获得的url有什么不同】
+
 ![获得url][3]
+
 3. 此时去你的印象笔记或者有道笔记中，可以获得如下的url
 ```
 https://mp.weixin.qq.com/mp/getmasssendmsg?__biz=MzAxMzMxNDIyOA==&uin=MTkxMzM3MDgw&key=b28b03434249256b99aa2677f019f6f2ae965ea649116c1ecc99b328960c6ad33ee988f2ad5e1c041940a38499000320&devicetype=iPhone+OS9.3.1&version=16030f11&lang=zh_CN&nettype=WIFI&fontScale=100&pass_ticket=TIbJ8GqYXw3D7QeX4tPPkWpg1pZYVuxLF7iwS2xU8IY%3D#wechat_webview_type=1http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=MzAxMzMxNDIyOA==#wechat_webview_type=1&wechat_redirect
