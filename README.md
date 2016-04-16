@@ -1,8 +1,8 @@
 # wechat-arts-crawl 微信公众号爬虫脚本
-A crawl program for collecting wechat arts based on NodeJs
-根据指定的公众号url，自动获取该公众号所有历史文章。
-此脚本将会按照公众号文章名建立文件夹，文件夹内将放置文章的html源文件和图片源文件。
-此脚本基于node.js实现。
+###根据指定的公众号url，自动获取该公众号所有历史文章。
+###此脚本将会按照公众号文章名建立文件夹，文件夹内将放置文章的html源文件和图片源文件。
+###此脚本基于node.js实现。
+##wechat-arts-crawl和其它微信公众号爬虫不同点在于，不通过weixin.sogou.com搜狗获取文章。因此不受各种cookie以及访问频率限制的约束，保证爬虫获取数据的效率。
 
 #配置说明
 1. 安装node环境
@@ -10,7 +10,6 @@ A crawl program for collecting wechat arts based on NodeJs
 3. cd wechat-arts-crawl && npm install
 
 #使用说明
-此爬虫脚本原先通过http://weixin.sogou.com/ 获取数据，但由于搜狗严格的cookie检查以及变态的访问频率限制，最终放弃走了这条路，而另行开辟道路。
 
 ###1.打开手机微信，关注你想要抓取的公众号，并且打开“历史消息”页面
 ![关注公众号][1]
