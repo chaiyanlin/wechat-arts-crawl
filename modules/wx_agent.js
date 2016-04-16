@@ -1,8 +1,6 @@
 var request = require("request"),
 	fs      = require("fs"),
-	path    = require('path'),
-	qs      = require("querystring"),
-	cheerio = require('cheerio');
+	WxImgCapturer = require('./wx_img_capturer.js');
 
 
 WxAgent = function(){};
@@ -63,44 +61,11 @@ WxAgent.prototype = {
 		console.log('获得文章：' + msg.app_msg_ext_info.title);
 		var title = me.strReplaceAll(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', msg.app_msg_ext_info.title);
 		title += '(id=' + msg.comm_msg_info.id + ')';
-		var opts = {
-					  url: msg.app_msg_ext_info.content_url,
-					  method: "GET",
-					  followRedirect: true
-				   };
-		request(opts, function(error, response, body){
-			fs.mkdirSync('./out/' + title);
-			fs.appendFile( './out/' + title + '/' + title + '.html', body, (err) => {
-			  if (err) 
-			  	console.log(err);
-			});
-			var $ = cheerio.load(body);
-			$('img').each(function(i,e){
-				me.downloadImg($(this).data('src'), './out/' + title);
-				me.downloadImg($(this).attr('src'), './out/' + title);
-			});
-		});
+		fs.mkdirSync('./out/' + title);//创建文章目录
+		var wxImgCapturer = new WxImgCapturer();
+		wxImgCapturer.start(msg.app_msg_ext_info, './out/' + title, title);
 	},
 
-
-	downloadImg: function(url, dir) {
-		if ( !url || new RegExp("base64").test(url) )
-			return;
-		var me = this;
-		console.log('尝试下载图片: ' + url);
-		var ext = path.extname(url) || '.png';
-		var timeStamp = + new Date();
-		request(url, function(error, response, body){
-			if (error) {
-				console.log(error.code);
-				console.log('下载图片失败：' + url);
-				fs.appendFile('./out/' + 'error.log', url + '=>' + dir + '\r\n', (err)=>{
-					if (err) 
-						console.log(err);
-				});
-			}
-		}).pipe(fs.createWriteStream(dir + '/' + timeStamp + ext));
-	},
 
 	/**
 	 * [strReplaceAll]
