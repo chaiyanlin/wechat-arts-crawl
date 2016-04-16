@@ -19,7 +19,7 @@ WxAgent.prototype = {
 	init: function(url) {
 		this.queryUrl = url.split('#').shift();
 		this.queryUrl += '&f=json';
-		console.log(this.queryUrl);
+		console.log('设置queryUrl为：' + this.queryUrl);
 		this.getMsgList();
 	},
 
@@ -27,7 +27,6 @@ WxAgent.prototype = {
 		var me = this;
 		var fromMsgId = me.fromMsgId || '';
 		if ( !me.hasNextPage ) {
-			console.log('总页数：' + me.totalPage);
 			return;
 		}
 		var opts = {
@@ -36,7 +35,7 @@ WxAgent.prototype = {
 			followRedirect: true
 		};
 
-		console.log('request url: ' + opts.url);
+		console.log('请求获取公众号列表: ' + opts.url);
 
 		request(opts, function(error, response, body){
 			var data = JSON.parse(body);
@@ -88,7 +87,7 @@ WxAgent.prototype = {
 		if ( !url || new RegExp("base64").test(url) )
 			return;
 		var me = this;
-		console.log('download img from url: ' + url);
+		console.log('尝试下载图片: ' + url);
 		var ext = path.extname(url) || '.png';
 		var timeStamp = + new Date();
 		request(url, function(error, response, body){

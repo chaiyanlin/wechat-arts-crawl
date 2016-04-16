@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/chaiyanlin/wechat-arts-crawl#readme",
   "devDependencies": {
+    "async": "^1.5.2",
     "cheerio": "^0.20.0",
     "crawler": "^0.4.3",
     "querystring": "^0.2.0",
