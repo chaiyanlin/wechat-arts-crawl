@@ -10,7 +10,7 @@ A crawl program for collecting wechat arts based on NodeJs
 3. cd wechat-arts-crawl && npm install
 
 #使用说明
-此爬虫脚本原先通过http://weixin.sogou.com/获取数据，但由于搜狗严格的cookie检查以及变态的访问频率限制，最终放弃走了这条路，而另行开辟道路。
+此爬虫脚本原先通过http://weixin.sogou.com/ 获取数据，但由于搜狗严格的cookie检查以及变态的访问频率限制，最终放弃走了这条路，而另行开辟道路。
 
 ###1.打开手机微信，关注你想要抓取的公众号，并且打开“历史消息”页面
 ![关注公众号][1]
