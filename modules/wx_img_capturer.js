@@ -48,52 +48,92 @@ WxImgCapturer.prototype = {
 			//下载文章首图片
 			me.downloadImg(me.appMsgExtInfo.cover, 'cover');
 			//下载文章内图片
-			$('img').each(function(i,e){
-				//优先下载原图
-				if ( $(this).attr('data-src') ) {
-					me.downloadImg($(this).attr('data-src'));
-				}
-				else {
-					me.downloadImg($(this).attr('src'));
-				}
-			});
+			me.imgUrlList = $('img').toArray();
+			for (var i = 0; i < me.imgUrlList.length; i++) {
+				me.downloadImg(me.imgUrlList[i].attribs);
+			}
 		});
 	},
 
-	downloadImg: function(imgUrl, imgName) {
+	downloadImg: function(imgObj, imgName) {
 		var me = this;
-		fs.appendFile(me.imgDest + '/imgList.log', imgUrl + '\r\n');
-		if ( !me.imgUrlFilter(imgUrl) )
+		//fs.appendFile(me.imgDest + '/imgList.log', imgObj + '\r\n');
+		var imgUrl = me.imgUrlFilter(imgObj);
+		if ( !imgUrl )
 			return;
-		console.log('尝试下载图片：' + imgUrl);
 		imgName = imgName || + new Date();
-		var ext = me.getImgExt(imgUrl);//图片后缀名
+		var ext = me.getImgExt(imgObj);//图片后缀名
 
-		request(imgUrl, function(error, response, body){
-			if ( error ) {
+		//记录下载图片log
+		fs.appendFile(me.imgDest + '/imgList.log', imgUrl + '\r\n', (err)=>{
+			if (err) 
+				console.log(err);
+		});
+
+		var stream = fs.createWriteStream(me.imgDest + '/' + imgName + ext);
+		request.get(imgUrl, function(error, response, body){
+			console.log('下载图片：' + imgUrl + ' (' + response.statusCode + ')');
+			 if ( error ) {
 				console.log(error.code);
-				console.log('下载图片失败：' + imgUrl);
-				fs.appendFile(me.imgDest + '/error.log', imgUrl + '\r\n', (err)=>{
-					if (err) 
-						console.log(err);
-				});
+				console.log('ERROR:下载图片失败--->');
+				console.log(imgObj);
+				console.log('<---');
+				fs.appendFile(me.imgDest + '/error.log', imgUrl + '\r\n');
 			}
-		}).pipe(fs.createWriteStream(me.imgDest + '/' + imgName + ext));
+		}).pipe(stream).on('close', function(){
+			stream.close();
+			console.log('SUCCESS:下载图成功--->');
+			console.log(imgObj);
+			console.log('<---');
+			fs.appendFile(me.imgDest + '/downloadList.log', imgUrl + '\r\n');
+		});
 	},
 
 
 	//去除不合法的img url
-	imgUrlFilter: function(imgUrl) {
-		//暂不支持base64图片抓取
-		if ( !imgUrl || new RegExp("base64").test(imgUrl) )
+	imgUrlFilter: function(imgObj) {
+		if ( typeof(imgObj) === 'string' )
+			return imgObj;
+		//检测是否存在src或者data-src属性
+		if ( !imgObj.hasOwnProperty('src') && !imgObj.hasOwnProperty('data-src') )
 			return false;
-		return true;
+
+		//检测src和data-src至少有一个不能为空
+		var hasSrc = null,
+			hasDataSrc = null;
+		if ( imgObj.hasOwnProperty('src') )
+			hasSrc = (imgObj.src !== '');
+		if ( imgObj.hasOwnProperty('data-src') )
+			hasDataSrc = (imgObj['data-src'] !== '');
+		if ( !hasSrc && !hasDataSrc )
+			return false;
+
+
+		//暂不支持base64图片抓取
+		if ( imgObj.hasOwnProperty('src') ) {
+			if ( new RegExp("base64").test(imgObj.src) )
+				return false;
+		}
+
+		if ( hasDataSrc )
+			return imgObj['data-src'];
+		else
+			return imgObj['src'];
 	},
 
 
 	//如果由于url问题获取不到图片后缀名，则返回.png
-	getImgExt: function(imgUrl) {
-		var ext = path.extname(imgUrl) || '.png';
+	getImgExt: function(imgObj) {
+		if ( imgObj.hasOwnProperty('data-type') )
+			return '.' + imgObj['data-type'];
+		var src = null;
+		if ( imgObj.hasOwnProperty('data-src') )
+			src = imgObj['data-src'];
+		else if ( imgObj.hasOwnProperty('src') )
+			src = imgObj.src;
+		else
+			src = imgObj;
+		var ext = path.extname(src) || '.png';
 		return ext;
 	}
 };
