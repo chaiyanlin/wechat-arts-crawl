@@ -53,8 +53,10 @@ WxImgCapturer.prototype = {
 						  .run(function(err, files){
 						  		if ( !err )
 						  			console.log('DOWNLOAD SUCCESS: ' + me.appMsgExtInfo.cover);
-						  		else
+						  		else {
 						  			console.log('FAIL TO DOWNLOAD: ' + me.appMsgExtInfo.cover);
+						  			fs.appendFile(me.imgDest + '/error.log', me.appMsgExtInfo.cover + '\r\n');
+						  		}
 						  });
 
 			//下载文章内图片
@@ -69,8 +71,10 @@ WxImgCapturer.prototype = {
 								  .run(function(err, files){
 								  		if ( !err )
 								  			console.log('DOWNLOAD SUCCESS: ' + url1);
-								  		else
+								  		else {
 								  			console.log('FAIL TO DOWNLOAD: ' + url1);
+								  			fs.appendFile(me.imgDest + '/error.log', url1 + '\r\n');
+								  		}
 								  });
 				}
 				if ( me.imgUrlList[i].attribs.hasOwnProperty('src') ) {
@@ -82,8 +86,10 @@ WxImgCapturer.prototype = {
 								  .run(function(err, files){
 								  		if ( !err )
 								  			console.log('DOWNLOAD SUCCESS: ' + url2);
-								  		else
+								  		else {
 								  			console.log('FAIL TO DOWNLOAD: ' + url2);
+								  			fs.appendFile(me.imgDest + '/error.log', url2 + '\r\n');
+								  		}
 								  });
 				}
 			}
