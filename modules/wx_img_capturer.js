@@ -1,8 +1,9 @@
 var request = require("request"),
-	fs      = /*require('graceful-fs'),*/require("fs"),
+	fs      = require("fs"),
 	qs      = require("querystring"),
 	path    = require('path'),
-	cheerio = require('cheerio');
+	cheerio = require('cheerio'),
+	Download = require('download');
 
 var WxImgCapturer = function(){};
 
@@ -46,79 +47,47 @@ WxImgCapturer.prototype = {
 			var $ = cheerio.load(body);
 
 			//下载文章首图片
-			me.downloadImg(me.appMsgExtInfo.cover, 'cover');
+			new Download().get(me.appMsgExtInfo.cover)
+						  .rename('cover.png')
+						  .dest(me.imgDest)
+						  .run(function(err, files){
+						  		if ( !err )
+						  			console.log('DOWNLOAD SUCCESS: ' + me.appMsgExtInfo.cover);
+						  		else
+						  			console.log('FAIL TO DOWNLOAD: ' + me.appMsgExtInfo.cover);
+						  });
+
 			//下载文章内图片
 			me.imgUrlList = $('img').toArray();
 			for (var i = 0; i < me.imgUrlList.length; i++) {
-				me.downloadImg(me.imgUrlList[i].attribs);
+				if ( me.imgUrlList[i].attribs.hasOwnProperty('data-src') ) {
+					var url1 = me.imgUrlList[i].attribs['data-src'];
+					fs.appendFile(me.imgDest + '/imgList.log', url1 + '\r\n');
+					new Download().get(url1)
+								  .rename(+ new Date() + Math.floor((Math.random() * 1000) + 1) + me.getImgExt(me.imgUrlList[i].attribs))
+								  .dest(me.imgDest)
+								  .run(function(err, files){
+								  		if ( !err )
+								  			console.log('DOWNLOAD SUCCESS: ' + url1);
+								  		else
+								  			console.log('FAIL TO DOWNLOAD: ' + url1);
+								  });
+				}
+				if ( me.imgUrlList[i].attribs.hasOwnProperty('src') ) {
+					var url2 = me.imgUrlList[i].attribs['src'];
+					fs.appendFile(me.imgDest + '/imgList.log', url2 + '\r\n');
+					new Download().get(url2)
+								  .rename(+ new Date() + Math.floor((Math.random() * 1000) + 1) + me.getImgExt(me.imgUrlList[i].attribs))
+								  .dest(me.imgDest)
+								  .run(function(err, files){
+								  		if ( !err )
+								  			console.log('DOWNLOAD SUCCESS: ' + url2);
+								  		else
+								  			console.log('FAIL TO DOWNLOAD: ' + url2);
+								  });
+				}
 			}
 		});
-	},
-
-	downloadImg: function(imgObj, imgName) {
-		var me = this;
-		//fs.appendFile(me.imgDest + '/imgList.log', imgObj + '\r\n');
-		var imgUrl = me.imgUrlFilter(imgObj);
-		if ( !imgUrl )
-			return;
-		imgName = imgName || + new Date();
-		var ext = me.getImgExt(imgObj);//图片后缀名
-
-		//记录下载图片log
-		fs.appendFile(me.imgDest + '/imgList.log', imgUrl + '\r\n', (err)=>{
-			if (err) 
-				console.log(err);
-		});
-
-		var stream = fs.createWriteStream(me.imgDest + '/' + imgName + ext);
-		request.get(imgUrl, function(error, response, body){
-			console.log('下载图片：' + imgUrl + ' (' + response.statusCode + ')');
-			 if ( error ) {
-				console.log(error.code);
-				console.log('ERROR:下载图片失败--->');
-				console.log(imgObj);
-				console.log('<---');
-				fs.appendFile(me.imgDest + '/error.log', imgUrl + '\r\n');
-			}
-		}).pipe(stream).on('close', function(){
-			stream.close();
-			console.log('SUCCESS:下载图成功--->');
-			console.log(imgObj);
-			console.log('<---');
-			fs.appendFile(me.imgDest + '/downloadList.log', imgUrl + '\r\n');
-		});
-	},
-
-
-	//去除不合法的img url
-	imgUrlFilter: function(imgObj) {
-		if ( typeof(imgObj) === 'string' )
-			return imgObj;
-		//检测是否存在src或者data-src属性
-		if ( !imgObj.hasOwnProperty('src') && !imgObj.hasOwnProperty('data-src') )
-			return false;
-
-		//检测src和data-src至少有一个不能为空
-		var hasSrc = null,
-			hasDataSrc = null;
-		if ( imgObj.hasOwnProperty('src') )
-			hasSrc = (imgObj.src !== '');
-		if ( imgObj.hasOwnProperty('data-src') )
-			hasDataSrc = (imgObj['data-src'] !== '');
-		if ( !hasSrc && !hasDataSrc )
-			return false;
-
-
-		//暂不支持base64图片抓取
-		if ( imgObj.hasOwnProperty('src') ) {
-			if ( new RegExp("base64").test(imgObj.src) )
-				return false;
-		}
-
-		if ( hasDataSrc )
-			return imgObj['data-src'];
-		else
-			return imgObj['src'];
 	},
 
 

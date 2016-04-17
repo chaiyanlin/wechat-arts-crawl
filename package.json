@@ -23,6 +23,7 @@
   "homepage": "https://github.com/chaiyanlin/wechat-arts-crawl#readme",
   "devDependencies": {
     "cheerio": "^0.20.0",
+    "download": "^4.4.3",
     "graceful-fs": "^4.1.3",
     "request": "^2.69.0",
     "rimraf": "^2.5.2"
